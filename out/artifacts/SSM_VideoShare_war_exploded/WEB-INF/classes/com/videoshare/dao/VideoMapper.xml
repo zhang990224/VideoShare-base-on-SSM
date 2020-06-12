@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--注意：在mapper代理时，它具有特殊及重要的作用-->
+<!-- namespace：命名空间，用于隔离sql -->
+<!-- 还有一个很重要的作用，使用动态代理开发DAO，1. namespace必须和Mapper接口类路径一致 -->
+<mapper namespace="com.videoshare.dao.VideoMapper">
+    <resultMap type="com.videoshare.po.Video" id="videoUserResultMap">
+        <!--用户信息-->
+        <id property="id" column="id" />
+        <result property="user_id" column="user_id" />
+        <result property="vname" column="vname" />
+        <result property="vnote" column="vnote" />
+        <result property="vimg" column="vimg" />
+        <result property="vsrc" column="vsrc" />
+        <result property="vtype" column="vtype" />
+        <result property="collected" column="collected" />
+        <result property="watched" column="watched" />
+        <result property="iswatched" column="iswatched" />
+        <result property="createtime" column="createtime" />
+        <association property="user_item" javaType="com.videoshare.po.User_Item">
+            <id column="id" property="id"/>
+            <result column="user_id" property="user_id"/>
+            <result column="username" property="username"/>
+            <result column="u_img" property="u_img"/>
+            <result column="birthday" property="birthday"/>
+            <result column="introduce" property="introduce"/>
+            <result column="fans" property="fans"/>
+            <result column="concern" property="concern"/>
+            <result column="v_num" property="v_num"/>
+            <result column="c_num" property="c_num"/>
+        </association>
+    </resultMap>
+    <resultMap type="com.videoshare.po.Collect" id="collectVideoUserResultMap">
+        <id property="id" column="id" />
+        <result property="video_id" column="video_id" />
+        <result property="collector_id" column="collector_id" />
+        <association property="video" javaType="com.videoshare.po.Video">
+            <!--用户信息-->
+            <id property="id" column="id" />
+            <result property="user_id" column="user_id" />
+            <result property="vname" column="vname" />
+            <result property="vnote" column="vnote" />
+            <result property="vimg" column="vimg" />
+            <result property="vsrc" column="vsrc" />
+            <result property="vtype" column="vtype" />
+            <result property="collected" column="collected" />
+            <result property="watched" column="watched" />
+            <result property="iswatched" column="iswatched" />
+            <result property="createtime" column="createtime" />
+            <association property="user_item" javaType="com.videoshare.po.User_Item">
+                <id column="id" property="id"/>
+                <result column="user_id" property="user_id"/>
+                <result column="username" property="username"/>
+                <result column="u_img" property="u_img"/>
+                <result column="birthday" property="birthday"/>
+                <result column="introduce" property="introduce"/>
+                <result column="fans" property="fans"/>
+                <result column="concern" property="concern"/>
+                <result column="v_num" property="v_num"/>
+                <result column="c_num" property="c_num"/>
+            </association>
+        </association>
+    </resultMap>
+    <resultMap type="com.videoshare.po.Comment" id="CommentUserResultMap">
+        <id property="id" column="id" />
+        <result property="video_id" column="video_id" />
+        <result property="user_id" column="user_id" />
+        <result property="v_comment" column="v_comment" />
+        <result property="v_createtime" column="v_createtime" />
+            <association property="user_item" javaType="com.videoshare.po.User_Item">
+                <id column="id" property="id"/>
+                <result column="user_id" property="user_id"/>
+                <result column="username" property="username"/>
+                <result column="u_img" property="u_img"/>
+            </association>
+    </resultMap>
+    <resultMap type="com.videoshare.po.Comment" id="CommentUVResultMap">
+        <id property="id" column="id" />
+        <result property="video_id" column="video_id" />
+        <result property="user_id" column="user_id" />
+        <result property="v_comment" column="v_comment" />
+        <result property="v_createtime" column="v_createtime" />
+        <association property="video" javaType="com.videoshare.po.Video">
+            <result property="user_id" column="user_id" />
+            <result property="vname" column="vname" />
+            <result property="vnote" column="vnote" />
+            <result property="vimg" column="vimg" />
+            <result property="vsrc" column="vsrc" />
+            <result property="vtype" column="vtype" />
+            <result property="collected" column="collected" />
+            <result property="watched" column="watched" />
+            <result property="iswatched" column="iswatched" />
+            <result property="createtime" column="createtime" />
+            <association property="user_item" javaType="com.videoshare.po.User_Item">
+                <id column="id" property="id"/>
+                <result column="user_id" property="user_id"/>
+                <result column="username" property="username"/>
+                <result column="u_img" property="u_img"/>
+            </association>
+        </association>
+    </resultMap>
+    <insert id="insertVideo" parameterType="com.videoshare.po.Video">
+        <!-- selectKey 标签实现主键返回 -->
+        <!-- keyColumn:主键对应的表中的哪一列 -->
+        <!-- keyProperty：主键对应的pojo中的哪一个属性 -->
+        <!-- order：设置在执行insert语句前执行查询id的sql，孩纸在执行insert语句之后执行查询id的sql -->
+        <!-- resultType：设置返回的id的类型 -->
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `video`
+        (user_id,vname,vnote,vimg,vsrc,vtype,collected,watched,iswatched,createtime) VALUES (#{user_id},#{vname},#{vnote},#{vimg},#{vsrc},#{vtype},#{collected},#{watched},#{iswatched},NOW())
+    </insert>
+    <!--查询观看量前六的视频-->
+    <select id="DisVideoByWatched" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id where iswatched = 1 ORDER BY watched DESC LIMIT 0,6
+    </select>
+    <!--查询用户全部视频-->
+    <select id="DisAllVideo" parameterType="int" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id limit #{page},5
+    </select>
+    <!--查询某用户全部视频-->
+    <select id="DisAllVideoById" parameterType="com.videoshare.po.Pageresult" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id where v.user_id = #{user_id} and iswatched = 1 limit #{start},8
+    </select>
+    <!--查询用户审核中的视频-->
+    <select id="DisVideoNoWatched" parameterType="int" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id where v.user_id = #{user_id} and iswatched = 0
+    </select>
+    <!--查询某用户某个视频-->
+    <select id="DisVideoById" parameterType="int" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id WHERE v.id = #{id}
+    </select>
+    <!--查询某用户视频数量-->
+    <select id="CountVideoByUid" parameterType="int" resultType="int">
+        SELECT count(*) FROM video where user_id = #{user_id} and iswatched = 1
+    </select>
+    <!--查询视频数量-->
+    <select id="CountVideo" resultType="int">
+        SELECT count(*) FROM video
+    </select>
+    <!--更新视频审核-->
+    <update id="UpdateIsWatchedById" parameterType="com.videoshare.po.Video">
+	    UPDATE `video` SET iswatched = #{iswatched} WHERE id = #{id}
+    </update>
+    <!--查询某用户最近发布的五个视频-->
+    <select id="DisRecentVideoByUid" parameterType="int" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id WHERE v.user_id = #{user_id} and iswatched = 1 ORDER BY v.id DESC  LIMIT 0,5
+    </select>
+    <!--自己主页置顶最受欢迎的视频-->
+    <select id="DisPopularVideoByUid" parameterType="int" resultType="com.videoshare.po.Video">
+        SELECT * FROM video WHERE user_id = #{user_id} and iswatched = 1 ORDER BY watched DESC  LIMIT 0,1
+    </select>
+    <!--更新视频观看量-->
+    <update id="UpdateVwatchById" parameterType="com.videoshare.po.Video">
+	    UPDATE `video` SET watched = #{watched} WHERE id = #{id}
+    </update>
+    <!--更新视频数-->
+    <update id="UpdateUserVnumById" parameterType="com.videoshare.po.User_Item">
+	    UPDATE `user_item` SET v_num = #{v_num} WHERE user_id = #{user_id}
+    </update>
+    <delete id="DeleteVideoById" parameterType="int">
+		delete from video where id = #{id}
+	</delete>
+    <!--是否收藏-->
+    <select id="IsCollected" parameterType="com.videoshare.po.Collect" resultType="int">
+        SELECT count(*) FROM user_collect where video_id = #{video_id} and collector_id = #{collector_id}
+    </select>
+    <!-- 收藏视频 -->
+    <insert id="CollectVideo" parameterType="com.videoshare.po.Collect">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `user_collect`
+        (video_id,collector_id) VALUES (#{video_id},#{collector_id})
+    </insert>
+    <!-- 取消收藏视频 -->
+    <delete id="CanelCollectVideo" parameterType="com.videoshare.po.Collect">
+		delete from user_collect where video_id = #{video_id} and collector_id = #{collector_id}
+	</delete>
+    <!--更新视频收藏数-->
+    <update id="UpdateUserCnumById" parameterType="com.videoshare.po.User_Item">
+	    UPDATE `user_item` SET c_num = #{c_num} WHERE user_id = #{user_id}
+    </update>
+    <select id="CountUserCnumById" parameterType="int" resultType="int">
+	    SELECT count(*) from user_collect where  collector_id = #{collector_id}
+    </select>
+    <!--更新视频被收藏数-->
+    <update id="UpdateVcollectedById" parameterType="com.videoshare.po.Video">
+	    UPDATE `video` SET collected = #{collected} WHERE id = #{id}
+    </update>
+    <select id="CountVcollectedById" parameterType="int" resultType="int">
+	    SELECT count(*) from user_collect where  video_id = #{video_id}
+    </select>
+    <select id="DisCollectVideo" parameterType="int" resultMap="collectVideoUserResultMap">
+        SELECT * FROM `user_collect` c JOIN `video` v ON v.id = c.video_id LEFT JOIN `user_item` u ON u.user_id = v.user_id WHERE c.collector_id = #{collector_id}
+    </select>
+
+    <!--模糊查询部分-->
+    <!--查询视频-->
+    <select id="FindVideoByName" parameterType="String" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id WHERE v.vname like '%${value}%' and iswatched = 1 ORDER BY watched DESC
+    </select>
+    <select id="FindVideoByNameP" parameterType="com.videoshare.po.Pageresult" resultMap="videoUserResultMap">
+        SELECT * FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id WHERE v.vname like concat('%',#{vname},'%') ORDER BY watched DESC LIMIT #{start},5
+    </select>
+    <select id="CountVideoByName" parameterType="String" resultType="int">
+        SELECT count(*) FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id WHERE v.vname like '%${value}%' and iswatched = 1
+    </select>
+    <select id="CountVideoByNameP" parameterType="String" resultType="int">
+        SELECT count(*) FROM `video` v LEFT JOIN `user_item` u ON v.user_id = u.user_id WHERE v.vname like '%${value}%'
+    </select>
+    <!--查询用户-->
+    <select id="FindUserByName" parameterType="String" resultType="com.videoshare.po.User_Item">
+        SELECT * FROM user_item WHERE username like '%${value}%' ORDER BY fans DESC
+    </select>
+    <select id="FindUserByNameP" parameterType="com.videoshare.po.Pageresult" resultType="com.videoshare.po.User_Item">
+        SELECT * FROM user_item WHERE username like concat('%',#{username},'%') ORDER BY fans DESC LIMIT #{start},5
+    </select>
+    <select id="CountUserByName" parameterType="String" resultType="int">
+        SELECT count(*) FROM user_item WHERE username like '%${value}%'
+    </select>
+
+    <!--用户对视频进行评论-->
+    <insert id="AddComment" parameterType="com.videoshare.po.Comment">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `video_comment`
+        (video_id,user_id,v_comment,v_createtime) VALUES (#{video_id},#{user_id},#{v_comment},NOW())
+    </insert>
+    <!--显示评论-->
+    <select id="DisCommentById" parameterType="int" resultMap="CommentUserResultMap">
+        SELECT * FROM `video_comment` c LEFT JOIN `user_item` u ON u.user_id = c.user_id WHERE c.video_id = #{video_id} ORDER BY c.v_createtime DESC
+    </select>
+    <select id="CountCommentById" parameterType="int" resultType="int">
+        SELECT count(*) FROM `video_comment` c LEFT JOIN `user_item` u ON u.user_id = c.user_id WHERE c.video_id = #{video_id}
+    </select>
+    <delete id="DeleteCommentById" parameterType="com.videoshare.po.Comment">
+		delete from video_comment where video_id = #{video_id} and user_id = #{user_id}
+	</delete>
+    <select id="DisComment" parameterType="int" resultMap="CommentUVResultMap">
+        SELECT * FROM `video_comment` c JOIN `video` v ON v.id = c.video_id LEFT JOIN `user_item` u ON u.user_id = c.user_id ORDER BY c.v_createtime DESC limit #{start},5
+    </select>
+    <select id="CountComment" parameterType="int" resultType="int">
+        SELECT count(*) FROM video_comment
+    </select>
+    <select id="DisCommentF" parameterType="com.videoshare.po.Pageresult" resultMap="CommentUVResultMap">
+        SELECT * FROM `video_comment` c JOIN `video` v ON v.id = c.video_id LEFT JOIN `user_item` u ON u.user_id = c.user_id WHERE username like concat('%',#{username},'%') ORDER BY c.v_createtime DESC limit #{start},5
+    </select>
+    <select id="CountCommentF" parameterType="com.videoshare.po.Pageresult" resultType="int">
+        SELECT count(*) FROM `video_comment` c JOIN `video` v ON v.id = c.video_id LEFT JOIN `user_item` u ON u.user_id = c.user_id WHERE u.username like concat('%',#{username},'%')
+    </select>
+</mapper>

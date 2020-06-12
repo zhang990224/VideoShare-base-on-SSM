@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--注意：在mapper代理时，它具有特殊及重要的作用-->
+<!-- namespace：命名空间，用于隔离sql -->
+<!-- 还有一个很重要的作用，使用动态代理开发DAO，1. namespace必须和Mapper接口类路径一致 -->
+<mapper namespace="com.videoshare.dao.UserMapper">
+    <resultMap type="com.videoshare.po.Message" id="MessageUserResultMap">
+        <!--关系-->
+        <id property="id" column="id" />
+        <result property="send_id" column="send_id" />
+        <result property="receive_id" column="receive_id" />
+        <result property="content" column="content" />
+        <result property="sendtype" column="sendtype" />
+        <result property="receivetype" column="receivetype" />
+        <result property="iswatched" column="iswatched" />
+        <result property="createtime" column="createtime" />
+        <association property="user_item" javaType="com.videoshare.po.User_Item">
+            <id column="id" property="id"/>
+            <result column="user_id" property="user_id"/>
+            <result column="username" property="username"/>
+            <result column="u_img" property="u_img"/>
+        </association>
+    </resultMap>
+
+    <!-- 根据用户ID查询用户信息-->
+    <!-- select：表示一个MappingStatement对象-->
+    <!-- id：statement的唯一标识-->
+    <!-- #{}：表示一个占位符？-->
+    <!-- #{id}：里面的id表示输入参数的参数名称，如果该参数是简单类型，那么#{}里面的参数名称可以任意-->
+    <!-- parameterType：输入参数的java类型-->
+    <!-- resultType：输出结果的所映射的java类型（单条结果所对应的的java类型）-->
+    <select id="findUserById" parameterType="int" resultType="com.videoshare.po.User">
+        SELECT * FROM user WHERE id =#{id}
+    </select>
+    <select id="findUserMaxId" resultType="int">
+        SELECT max(id) FROM user
+    </select>
+    <!--查询全部-->
+    <select id="findUserAll" resultType="com.videoshare.po.User">
+        SELECT * FROM user
+    </select>
+    <!--查询某用户信息-->
+    <select id="findUserItem" parameterType="String" resultType="com.videoshare.po.User">
+        SELECT * FROM user where email = #{email}
+    </select>
+    <!--查询某用户全部信息-->
+    <select id="findUserAllItem" parameterType="int" resultType="com.videoshare.po.User_Item">
+        SELECT * FROM user_item where user_id = #{user_id}
+    </select>
+    <!--通过username查找用户-->
+    <select id="findUserByUsername" parameterType="String" resultType="com.videoshare.po.User">
+        select * from user where username like '%${value}%'
+    </select>
+    <!--查找email是否存在-->
+    <select id="findUserEmail" parameterType="String" resultType="int">
+        select count(*) from user where email = #{email}
+    </select>
+    <!--查找user是否存在-->
+    <select id="findUser" parameterType="com.videoshare.po.User" resultType="int">
+        select count(*) from user where username = #{username} and email = #{email}
+    </select>
+    <select id="findUserId" parameterType="String" resultType="int">
+        select id from user where email = #{email}
+    </select>
+    <!--通过email查找用户-->
+    <select id="findUserLogin" parameterType="com.videoshare.po.User" resultType="int">
+        select count(*) from user where email = #{email} and password = #{password}
+    </select>
+    <!-- 新增用户 -->
+    <insert id="insertUser" parameterType="com.videoshare.po.User">
+        <!-- selectKey 标签实现主键返回 -->
+        <!-- keyColumn:主键对应的表中的哪一列 -->
+        <!-- keyProperty：主键对应的pojo中的哪一个属性 -->
+        <!-- order：设置在执行insert语句前执行查询id的sql，孩纸在执行insert语句之后执行查询id的sql -->
+        <!-- resultType：设置返回的id的类型 -->
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `user`
+        (email,username,password) VALUES (#{email},#{username},#{password})
+    </insert>
+    <!-- 新增用户详情 -->
+    <insert id="insertUserItem" parameterType="com.videoshare.po.User">
+    <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+        SELECT LAST_INSERT_ID()
+    </selectKey>
+    INSERT INTO `user_item`
+    (user_id,username,u_img,birthday,introduce,fans,concern,v_num,c_num) VALUES (#{user_id},#{username},#{u_img},NOW(),#{introduce},#{fans},#{concern},#{v_num},#{c_num})
+    </insert>
+    <!-- 更新用户密码 -->
+    <update id="updatePswById" parameterType="com.videoshare.po.User">
+	UPDATE `user` SET
+	password = #{password} WHERE id = #{id}
+    </update>
+    <!-- 删除用户 -->
+    <delete id="deleteUserById" parameterType="int">
+		delete from user where id=#{id}
+	</delete>
+    <!-- 更新粉丝人数 -->
+    <update id="updateUserFansById" parameterType="com.videoshare.po.User_Item">
+	    UPDATE `user_item` SET fans = #{fans} WHERE user_id = #{user_id}
+    </update>
+    <!-- 更新关注人数 -->
+    <update id="updateUserConcernById" parameterType="com.videoshare.po.User_Item">
+	    UPDATE `user_item` SET concern = #{concern} WHERE user_id = #{user_id}
+    </update>
+    <!-- 更新个人介绍 -->
+    <update id="updateIntroduceById" parameterType="com.videoshare.po.User_Item">
+	    UPDATE `user_item` SET introduce = #{introduce} WHERE user_id = #{user_id}
+    </update>
+    <select id="disUserExpectMe" parameterType="int" resultType="com.videoshare.po.User_Item">
+        select * from user_item where user_id not in (select user_id from user_item where user_id=#{user_id}) ORDER BY fans DESC
+    </select>
+    <!-- 更新头像 -->
+    <update id="updateHeadById" parameterType="com.videoshare.po.User_Item">
+	    UPDATE `user_item` SET u_img = #{u_img} WHERE user_id = #{user_id}
+    </update>
+    <!--显示全部用户-->
+    <select id="disAllUser" parameterType="int" resultType="com.videoshare.po.User_Item">
+        select * from user_item limit #{start},5
+    </select>
+    <select id="CountAllUser" resultType="int">
+        select count(*) from user_item
+    </select>
+
+    <!--管理员-->
+    <select id="findAdminLogin" parameterType="com.videoshare.po.Admin" resultType="int">
+        select count(*) from admin where adminname = #{adminname} and password = #{password}
+    </select>
+
+    <!--关于信息-->
+    <!-- 新增信息 -->
+    <insert id="insertMessage" parameterType="com.videoshare.po.Message">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `message`
+        (send_id,receive_id,content,sendtype,receivetype,iswatched,createtime) VALUES (#{send_id},#{receive_id},#{content},#{sendtype},#{receivetype},#{iswatched},NOW())
+    </insert>
+    <!--显示信息-->
+    <select id="DisMessageById" parameterType="com.videoshare.po.Message" resultMap="MessageUserResultMap">
+        select * from `message` m LEFT JOIN `user_item` u ON m.send_id = u.user_id
+        WHERE m.receive_id = #{receive_id} and m.sendtype = #{sendtype} and m.receivetype = #{receivetype} ORDER BY m.createtime DESC
+    </select>
+    <!--计算未读信息数-->
+    <select id="CountMessageById" parameterType="com.videoshare.po.Message" resultType="int">
+        select count(*) from message where receive_id = #{receive_id} and sendtype = #{sendtype} and receivetype = #{receivetype} and iswatched = 0;
+    </select>
+    <update id="updateMsgById" parameterType="com.videoshare.po.Message">
+	    UPDATE `message` SET iswatched = #{iswatched} WHERE receive_id = #{receive_id} and receivetype = #{receivetype}
+    </update>
+    <delete id="deleteMsgById" parameterType="int">
+		delete from message where receive_id = #{receive_id}
+	</delete>
+
+    <!-- 新增通知 -->
+    <insert id="insertAdvise" parameterType="com.videoshare.po.Advise">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `advise`
+        (receiver_id,content,iswatched,createtime) VALUES (#{receiver_id},#{content},#{iswatched},NOW())
+    </insert>
+    <!--显示通知-->
+    <select id="DisAdviseById" parameterType="int" resultType="com.videoshare.po.Advise">
+        select * from advise WHERE receiver_id = #{receiver_id} ORDER BY createtime DESC
+    </select>
+    <!--计算通知未读数量-->
+    <select id="CountAdviseById" parameterType="com.videoshare.po.Advise" resultType="int">
+        select count(*) from advise where receiver_id = #{receiver_id} and iswatched = 0;
+    </select>
+    <!--更新通知状态-->
+    <update id="updateAdviseById" parameterType="com.videoshare.po.Advise">
+	    UPDATE `advise` SET iswatched = #{iswatched} WHERE receiver_id = #{receiver_id}
+    </update>
+    <delete id="deleteAdviseById" parameterType="int">
+		delete from advise where receiver_id = #{receiver_id}
+	</delete>
+
+    <!-- 新增反馈信息 -->
+    <insert id="insertFeedBack" parameterType="com.videoshare.po.Feedback">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `feedback`
+        (uid,uname,content,contact,createtime,iswatched) VALUES (#{uid},#{uname},#{content},#{contact},NOW(),#{iswatched})
+    </insert>
+    <!-- 显示反馈信息 -->
+    <select id="DisFeedBack" parameterType="int" resultType="com.videoshare.po.Feedback">
+        select * from feedback ORDER BY createtime DESC limit #{start},5
+    </select>
+    <!-- 显示指定id反馈信息 -->
+    <select id="DisFeedBackWatched" parameterType="com.videoshare.po.Pageresult" resultType="com.videoshare.po.Feedback">
+        select * from feedback where iswatched = #{iswatched} ORDER BY createtime DESC limit #{start},5
+    </select>
+    <!-- 删除反馈信息 -->
+    <delete id="deleteFeedBackById" parameterType="int">
+		delete from feedback where id = #{id}
+	</delete>
+    <select id="CountFeedBack" resultType="int">
+        select count(*) from feedback
+    </select>
+    <select id="CountFeedBackWatched" parameterType="int" resultType="int">
+        select count(*) from feedback where iswatched = #{iswatched}
+    </select>
+    <!--更新状态-->
+    <update id="updateFeedBackById" parameterType="com.videoshare.po.Feedback">
+	    UPDATE `feedback` SET iswatched = #{iswatched} WHERE id = #{id}
+    </update>
+</mapper>

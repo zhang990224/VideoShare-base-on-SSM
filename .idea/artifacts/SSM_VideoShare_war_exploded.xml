@@ -1,0 +1,18 @@
+<component name="ArtifactManager">
+  <artifact type="exploded-war" name="SSM_VideoShare:war exploded">
+    <output-path>$PROJECT_DIR$/out/artifacts/SSM_VideoShare_war_exploded</output-path>
+    <root id="root">
+      <element id="javaee-facet-resources" facet="SSM_VideoShare/web/Web" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="classes">
+          <element id="module-output" name="SSM_VideoShare" />
+        </element>
+        <element id="directory" name="lib">
+          <element id="library" level="project" name="Spring-5.2.3.RELEASE" />
+          <element id="library" level="project" name="Spring MVC-5.2.3.RELEASE" />
+          <element id="library" level="project" name="asm-7.1" />
+        </element>
+      </element>
+    </root>
+  </artifact>
+</component>

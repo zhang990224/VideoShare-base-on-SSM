@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--注意：在mapper代理时，它具有特殊及重要的作用-->
+<!-- namespace：命名空间，用于隔离sql -->
+<!-- 还有一个很重要的作用，使用动态代理开发DAO，1. namespace必须和Mapper接口类路径一致 -->
+<mapper namespace="com.videoshare.dao.RelationMapper">
+    <resultMap type="com.videoshare.po.Relation" id="RelationUserResultMap">
+        <!--关系-->
+        <id property="rid" column="rid" />
+        <result property="userid" column="userid" />
+        <result property="fansid" column="fansid" />
+        <association property="user_item" javaType="com.videoshare.po.User_Item">
+            <id column="id" property="id"/>
+            <result column="user_id" property="user_id"/>
+            <result column="username" property="username"/>
+            <result column="u_img" property="u_img"/>
+            <result column="birthday" property="birthday"/>
+            <result column="introduce" property="introduce"/>
+            <result column="fans" property="fans"/>
+            <result column="concern" property="concern"/>
+            <result column="v_num" property="v_num"/>
+            <result column="c_num" property="c_num"/>
+        </association>
+    </resultMap>
+    <resultMap type="com.videoshare.po.Relation" id="RVideoUserResultMap">
+        <!--关系-->
+        <id property="rid" column="rid" />
+        <result property="userid" column="userid" />
+        <result property="fansid" column="fansid" />
+        <association property="video" javaType="com.videoshare.po.Video">
+            <id property="id" column="id" />
+            <result property="user_id" column="user_id" />
+            <result property="vname" column="vname" />
+            <result property="vnote" column="vnote" />
+            <result property="vimg" column="vimg" />
+            <result property="vsrc" column="vsrc" />
+            <result property="vtype" column="vtype" />
+            <result property="collected" column="collected" />
+            <result property="watched" column="watched" />
+            <result property="iswatched" column="iswatched" />
+            <result property="createtime" column="createtime" />
+            <association property="user_item" javaType="com.videoshare.po.User_Item">
+                <id column="id" property="id"/>
+                <result column="user_id" property="user_id"/>
+                <result column="username" property="username"/>
+                <result column="u_img" property="u_img"/>
+                <result column="birthday" property="birthday"/>
+                <result column="introduce" property="introduce"/>
+                <result column="fans" property="fans"/>
+                <result column="concern" property="concern"/>
+                <result column="v_num" property="v_num"/>
+                <result column="c_num" property="c_num"/>
+            </association>
+        </association>
+    </resultMap>
+    <!--查看两个人是否为关注与被关注关系-->
+    <select id="isFans" parameterType="com.videoshare.po.Relation" resultType="int">
+          select count(*) from user_relation where userid = #{userid} and fansid = #{fansid}
+    </select>
+    <!-- 取消关注 -->
+    <delete id="deleteRelationById" parameterType="com.videoshare.po.Relation">
+		delete from user_relation where userid = #{userid} and fansid = #{fansid}
+	</delete>
+    <!--点击关注-->
+    <insert id="insertRelationById" parameterType="com.videoshare.po.Relation">
+        <selectKey keyColumn="rid" keyProperty="rid" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `user_relation`
+        (userid,fansid) VALUES (#{userid},#{fansid})
+    </insert>
+    <!--显示关注人-->
+    <select id="findRelationUserById" parameterType="int" resultMap="RelationUserResultMap">
+        select * from `user_relation` r LEFT JOIN `user_item` u ON r.userid = u.user_id WHERE r.fansid = #{fansid} ORDER BY u.fans DESC
+    </select>
+    <!--显示粉丝-->
+    <select id="findRelationUserFById" parameterType="int" resultMap="RelationUserResultMap">
+        select * from `user_relation` r LEFT JOIN `user_item` u ON r.fansid = u.user_id WHERE r.userid = #{userid} ORDER BY u.fans DESC
+    </select>
+    <!--显示四位关注人-->
+    <select id="fourRelationUserById" parameterType="int" resultMap="RelationUserResultMap">
+        select * from `user_relation` r LEFT JOIN `user_item` u ON r.userid = u.user_id WHERE r.fansid = #{fansid} ORDER BY u.fans DESC LIMIT 0,5
+    </select>
+    <!--显示关注人部分最新推送的视频-->
+    <select id="DisConcernVideo" parameterType="int" resultMap="RVideoUserResultMap">
+        SELECT * FROM `user_relation` r JOIN `video` v ON v.user_id = r.userid LEFT JOIN `user_item` u ON u.user_id = v.user_id WHERE r.fansid = #{fansid} ORDER BY v.createtime ASC LIMIT 0,4
+    </select>
+</mapper>
